@@ -71,5 +71,24 @@
     - **Property 6: HTML Export Semantic Correctness**
     - **Validates: Requirements 6.1, 6.2, 4.1, 4.3**
 
-- [x] 8. Final Checkpoint - Ensure all tests pass
-  - Ensure all tests pass, ask the user if questions arise.
+- [x] 8. Install Slash Command dependencies
+  - Install @tiptap/suggestion and tippy.js packages
+  - _Requirements: 8.1, 8.2_
+
+- [-] 9. Implement Slash Command Extension
+  - [x] 9.1 Create slashCommand.js extension file
+    - Create Tiptap extension using @tiptap/suggestion
+    - Define command items list (paragraph, headings H1-H3, bullet list, numbered list, code block, blockquote, horizontal rule)
+    - Implement filter logic for matching commands by query
+    - _Requirements: 8.1, 8.2, 8.3, 9.1, 9.2, 9.3_
+  - [ ]* 9.2 Write property test for slash command filter
+    - **Property 7: Slash Command Filter Matching**
+    - **Validates: Requirements 8.3**
+
+- [-] 10. Implement SlashCommandMenu component
+  - [x] 10.1 Create SlashCommandMenu.vue component
+    - Render floating menu with command items (icon, title, description)
+    - Implement keyboard navigation (Arrow Up/Down for selection)
+    - Handle Enter key to execute selected command
+    - Handle Escape key to close menu
+    - Display "No results" when filter matches nothi

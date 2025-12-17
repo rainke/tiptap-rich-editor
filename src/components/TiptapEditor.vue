@@ -1,5 +1,6 @@
 <script setup>
 import { useEditor, EditorContent } from '@tiptap/vue-3'
+import { Markdown } from '@tiptap/markdown'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import Link from '@tiptap/extension-link'
@@ -7,6 +8,7 @@ import Placeholder from '@tiptap/extension-placeholder'
 import { watch, onBeforeUnmount } from 'vue'
 import EditorToolbar from './EditorToolbar.vue'
 import { toMarkdown, toHTML } from '../utils/markdownConverter'
+import { SlashCommand } from '../utils/slashCommand'
 
 /**
  * TiptapEditor - Main rich text editor component
@@ -36,6 +38,7 @@ const editor = useEditor({
   content: props.modelValue,
   editable: props.editable,
   extensions: [
+    Markdown,
     StarterKit.configure({
       // StarterKit includes: Bold, Italic, Strike, Code, Heading, BulletList, 
       // OrderedList, Blockquote, CodeBlock, HorizontalRule, etc.
@@ -51,7 +54,8 @@ const editor = useEditor({
     }),
     Placeholder.configure({
       placeholder: props.placeholder
-    })
+    }),
+    SlashCommand
   ],
   onUpdate: ({ editor }) => {
     emit('update:modelValue', editor.getHTML())
@@ -93,8 +97,7 @@ function getHTML() {
 // Get Markdown content from editor
 function getMarkdown() {
   if (!editor.value) return ''
-  const html = editor.value.getHTML()
-  return toMarkdown(html)
+  return editor.value.getMarkdown()
 }
 
 /**

@@ -2,7 +2,7 @@
 
 ## Introduction
 
-本功能旨在基于 Tiptap 编辑器框架实现一个功能完善的富文本编辑器，支持 Markdown 语法输入和 HTML 内容的导入导出。编辑器将集成到现有的 Vue 3 应用中，提供直观的编辑体验和灵活的内容格式转换能力。
+本功能旨在基于 Tiptap 编辑器框架实现一个功能完善的富文本编辑器，支持 Markdown 语法输入和 HTML 内容的导入导出。编辑器将集成到现有的 Vue 3 应用中，提供直观的编辑体验和灵活的内容格式转换能力。编辑器同时支持传统工具栏模式和 Notion-like 的 slash command 交互模式，让用户可以根据习惯选择最适合的操作方式。
 
 ## Glossary
 
@@ -12,6 +12,9 @@
 - **Toolbar**: 编辑器工具栏，提供格式化操作的快捷按钮
 - **Editor Content**: 编辑器中的文档内容，可以是富文本、Markdown 或 HTML 格式
 - **Pretty Printer**: 将内部数据结构转换为格式化字符串输出的组件
+- **Slash Command**: 通过输入 "/" 触发的命令菜单，允许用户快速插入或转换内容块
+- **Command Menu**: 显示可用命令列表的浮动菜单，支持键盘导航和搜索过滤
+- **Block**: 编辑器中的内容单元，如段落、标题、列表、代码块等
 
 ## Requirements
 
@@ -101,3 +104,39 @@
 2. WHEN the editor receives focus THEN the Tiptap Editor SHALL provide visual feedback indicating the active state
 3. WHEN toolbar buttons are hovered THEN the Tiptap Editor SHALL display tooltips describing the button function
 4. WHEN a formatting option is active THEN the corresponding toolbar button SHALL display a highlighted state
+
+### Requirement 8
+
+**User Story:** As a user, I want to use slash commands to quickly insert content blocks, so that I can format content efficiently without leaving the keyboard.
+
+#### Acceptance Criteria
+
+1. WHEN a user types "/" at the start of a line or after a space THEN the Tiptap Editor SHALL display a command menu near the cursor position
+2. WHEN the command menu is displayed THEN the Tiptap Editor SHALL show a list of available block types with icons and descriptions
+3. WHEN a user continues typing after "/" THEN the Tiptap Editor SHALL filter the command list to show matching commands
+4. WHEN a user presses Arrow Up or Arrow Down THEN the Tiptap Editor SHALL navigate through the command menu items
+5. WHEN a user presses Enter or clicks a command item THEN the Tiptap Editor SHALL insert or convert to the selected block type and close the menu
+6. WHEN a user presses Escape THEN the Tiptap Editor SHALL close the command menu without making changes
+7. WHEN no commands match the filter text THEN the Tiptap Editor SHALL display a "No results" message
+
+### Requirement 9
+
+**User Story:** As a user, I want the command menu to include common block types, so that I can quickly access all formatting options.
+
+#### Acceptance Criteria
+
+1. WHEN the command menu is displayed THEN the Tiptap Editor SHALL include text formatting options (paragraph, headings H1-H3)
+2. WHEN the command menu is displayed THEN the Tiptap Editor SHALL include list options (bullet list, numbered list)
+3. WHEN the command menu is displayed THEN the Tiptap Editor SHALL include block options (code block, blockquote, horizontal rule)
+4. WHEN a heading command is selected THEN the Tiptap Editor SHALL convert the current block to the specified heading level
+5. WHEN a list command is selected THEN the Tiptap Editor SHALL convert the current block to the specified list type
+
+### Requirement 10
+
+**User Story:** As a user, I want to use both the toolbar and slash commands interchangeably, so that I can choose the interaction method that suits my workflow.
+
+#### Acceptance Criteria
+
+1. WHEN the editor is displayed THEN the Tiptap Editor SHALL show both the toolbar and support slash commands simultaneously
+2. WHEN a block type is changed via slash command THEN the toolbar SHALL reflect the current block state
+3. WHEN a block type is changed via toolbar THEN the slash command menu SHALL remain functional for subsequent edits

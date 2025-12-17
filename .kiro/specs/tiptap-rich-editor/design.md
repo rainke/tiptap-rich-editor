@@ -18,11 +18,13 @@ graph TB
     subgraph "Editor Components"
         Toolbar[EditorToolbar.vue]
         Content[EditorContent]
+        SlashMenu[SlashCommandMenu.vue]
     end
     
     subgraph "Tiptap Core"
         TiptapCore[Tiptap Editor Instance]
         Extensions[Extensions]
+        SlashExtension[Slash Command Extension]
     end
     
     subgraph "Format Converters"
@@ -34,8 +36,10 @@ graph TB
     App --> Editor
     Editor --> Toolbar
     Editor --> Content
+    Editor --> SlashMenu
     Editor --> TiptapCore
     TiptapCore --> Extensions
+    TiptapCore --> SlashExtension
     TiptapCore --> HTMLExporter
     TiptapCore --> MarkdownExporter
     TiptapCore --> MarkdownImporter
@@ -92,7 +96,53 @@ interface ToolbarButton {
 }
 ```
 
-### 3. Format Converters (格式转换器)
+### 3. SlashCommandMenu.vue (Slash 命令菜单组件)
+
+主要职责：
+- 渲染浮动命令菜单
+- 处理键盘导航（上下箭头、Enter、Escape）
+- 过滤和显示匹配的命令
+- 执行选中的命令
+
+```typescript
+interface SlashCommandMenuProps {
+  editor: Editor | null;
+  items: CommandItem[];
+  command: (item: CommandItem) => void;
+}
+
+interface CommandItem {
+  title: string;
+  description: string;
+  icon: string;
+  command: (editor: Editor) => void;
+}
+```
+
+### 4. Slash Command Extension (Tiptap 扩展)
+
+主要职责：
+- 监听 "/" 输入触发命令菜单
+- 管理菜单的显示/隐藏状态
+- 提供命令列表和过滤逻辑
+
+```typescript
+interface SlashCommandOptions {
+  suggestion: {
+    char: string;           // 触发字符 "/"
+    command: (props: { editor: Editor; range: Range; props: CommandItem }) => void;
+    items: (query: string) => CommandItem[];
+    render: () => {
+      onStart: (props: SuggestionProps) => void;
+      onUpdate: (props: SuggestionProps) => void;
+      onKeyDown: (props: SuggestionKeyDownProps) => boolean;
+      onExit: () => void;
+    };
+  };
+}
+```
+
+### 5. Format Converters (格式转换器)
 
 #### markdownConverter.js
 
@@ -181,6 +231,24 @@ Based on the prework analysis, the following properties have been identified:
 
 **Validates: Requirements 4.1, 4.3**
 
+### Property 7: Slash Command Filter Matching
+
+*For any* filter query string typed after "/", all displayed command items SHALL have titles or descriptions that contain the query string (case-insensitive match).
+
+**Validates: Requirements 8.3**
+
+### Property 8: Slash Command Execution Produces Correct Block Type
+
+*For any* command item selected from the slash menu, executing the command SHALL result in the editor content containing the corresponding block type (heading level, list type, code block, etc.).
+
+**Validates: Requirements 8.5, 9.4, 9.5**
+
+### Property 9: Toolbar State Synchronization
+
+*For any* block type change made via slash command, the toolbar's active state indicators SHALL correctly reflect the current block type.
+
+**Validates: Requirements 10.2**
+
 ## Error Handling
 
 ### HTML Import Errors
@@ -234,6 +302,18 @@ Based on the prework analysis, the following properties have been identified:
    - 应用标题命令
    - 验证 HTML 和 Markdown 输出正确
 
+5. **Slash Command Filter Test**
+   - 生成随机过滤字符串
+   - 验证所有返回的命令项都匹配过滤条件
+
+6. **Slash Command Execution Test**
+   - 随机选择命令项并执行
+   - 验证编辑器内容包含正确的块类型
+
+7. **Toolbar State Sync Test**
+   - 通过 slash command 改变块类型
+   - 验证工具栏状态正确反映当前块类型
+
 ### Test Annotation Format
 
 所有属性测试使用以下注释格式：
@@ -252,6 +332,8 @@ Based on the prework analysis, the following properties have been identified:
   "@tiptap/extension-underline": "^2.x",
   "@tiptap/extension-link": "^2.x",
   "@tiptap/extension-placeholder": "^2.x",
+  "@tiptap/suggestion": "^2.x",
+  "tippy.js": "^6.x",
   "turndown": "^7.x",
   "marked": "^11.x"
 }
