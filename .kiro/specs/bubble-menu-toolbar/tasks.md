@@ -1,0 +1,73 @@
+# Implementation Plan
+
+- [x] 1. Install and configure Bubble Menu extension
+  - [x] 1.1 Install @tiptap/extension-bubble-menu package
+    - Run `pnpm add @tiptap/extension-bubble-menu`
+    - _Requirements: 1.1, 1.2_
+  - [x] 1.2 Add BubbleMenu extension to TiptapEditor.vue
+    - Import BubbleMenu from @tiptap/extension-bubble-menu
+    - Configure shouldShow to display only when selection is non-empty
+    - _Requirements: 1.1, 1.2, 1.3_
+
+- [x] 2. Create BubbleMenuToolbar component
+  - [x] 2.1 Create BubbleMenuToolbar.vue with basic structure
+    - Create component file with script setup and template
+    - Define editor prop interface
+    - Set up format button configuration array (bold, italic, underline, strike, code, link)
+    - _Requirements: 2.1, 3.1_
+  - [x] 2.2 Implement formatting button actions
+    - Add click handlers for bold, italic, underline, strike, code buttons
+    - Use editor.chain().focus().toggleMark().run() pattern
+    - _Requirements: 2.2, 2.3, 2.4, 2.5, 2.6_
+  - [ ]* 2.3 Write property test for format mark toggle
+    - **Property 2: Format mark toggle consistency**
+    - **Validates: Requirements 2.2, 2.3, 2.4, 2.5, 2.6**
+  - [x] 2.4 Implement button active state display
+    - Add isActive computed property for each button
+    - Apply 'is-active' CSS class based on editor.isActive() result
+    - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5_
+  - [ ]* 2.5 Write property test for button active state reflection
+    - **Property 3: Button active state reflection**
+    - **Validates: Requirements 3.4, 4.1, 4.2, 4.3, 4.4, 4.5**
+
+- [x] 3. Implement link functionality
+  - [x] 3.1 Add link button with URL input prompt
+    - Implement link button click handler
+    - Show URL input prompt when link button clicked
+    - _Requirements: 3.1, 3.2_
+  - [x] 3.2 Implement link creation and editing
+    - Create hyperlink from selected text with entered URL
+    - Allow editing existing link URL
+    - Allow removing link from selected text
+    - _Requirements: 3.3, 3.5_
+  - [ ]* 3.3 Write property test for link creation
+    - **Property 4: Link creation from valid URL**
+    - **Validates: Requirements 3.3**
+
+- [x] 4. Integrate BubbleMenuToolbar with TiptapEditor
+  - [x] 4.1 Add BubbleMenu component to TiptapEditor template
+    - Import BubbleMenuToolbar component
+    - Add BubbleMenu wrapper with BubbleMenuToolbar as slot content
+    - Pass editor instance to BubbleMenuToolbar
+    - _Requirements: 1.1, 1.4_
+  - [ ]* 4.2 Write property test for selection visibility toggle
+    - **Property 1: Selection visibility toggle**
+    - **Validates: Requirements 1.1, 1.2**
+
+- [x] 5. Style BubbleMenuToolbar component
+  - [x] 5.1 Add compact toolbar styles
+    - Create scoped CSS for bubble menu container
+    - Style buttons to match EditorToolbar visual design
+    - Add hover and active state styles
+    - _Requirements: 5.1, 5.3_
+  - [x] 5.2 Add appear/disappear animations
+    - Configure Tippy.js animation options via BubbleMenu props
+    - Add CSS transitions for smooth show/hide
+    - _Requirements: 5.2_
+  - [x] 5.3 Configure menu positioning
+    - Set placement to avoid obscuring selected text
+    - Configure offset and flip behavior
+    - _Requirements: 5.4_
+
+- [x] 6. Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.

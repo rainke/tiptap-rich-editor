@@ -1,13 +1,15 @@
 <script setup>
 import { useEditor, EditorContent } from '@tiptap/vue-3'
+import { BubbleMenuPlugin } from '@tiptap/extension-bubble-menu'
 import { Markdown } from '@tiptap/markdown'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
-import { watch, onBeforeUnmount } from 'vue'
+import { ref, watch, onBeforeUnmount, onMounted } from 'vue'
 import EditorToolbar from './EditorToolbar.vue'
-import { toMarkdown, toHTML } from '../utils/markdownConverter'
+import BubbleMenuToolbar from './BubbleMenuToolbar.vue'
+import { toHTML } from '../utils/markdownConverter'
 import { SlashCommand } from '../utils/slashCommand'
 
 /**
@@ -32,6 +34,9 @@ const props = defineProps({
 })
 
 const emit = defineEmits(['update:modelValue', 'update'])
+
+// Ref for bubble menu element - Requirements 1.1, 1.2
+const bubbleMenuRef = ref(null)
 
 // Initialize Tiptap editor with StarterKit and extensions
 const editor = useEditor({
@@ -60,6 +65,54 @@ const editor = useEditor({
   onUpdate: ({ editor }) => {
     emit('update:modelValue', editor.getHTML())
     emit('update', editor)
+  }
+})
+
+// Register BubbleMenu plugin after editor is ready - Requirements 1.1, 1.2, 1.3
+onMounted(() => {
+  if (editor.value && bubbleMenuRef.value) {
+    editor.value.registerPlugin(
+      BubbleMenuPlugin({
+        pluginKey: 'bubbleMenu',
+        editor: editor.value,
+        element: bubbleMenuRef.value,
+        shouldShow: ({ editor: ed, state }) => {
+          // Only show when there's a non-empty selection - Requirements 1.1, 1.2
+          return !state.selection.empty && ed.isEditable
+        },
+        // Tippy.js options - Requirements 5.2 (animations), 5.4 (positioning)
+        tippyOptions: {
+          // Positioning - Requirement 5.4: avoid obscuring selected text
+          placement: 'top',
+          offset: [0, 8],
+          // Flip to bottom if not enough space above
+          popperOptions: {
+            modifiers: [
+              {
+                name: 'flip',
+                options: {
+                  fallbackPlacements: ['bottom', 'top-start', 'top-end', 'bottom-start', 'bottom-end']
+                }
+              },
+              {
+                name: 'preventOverflow',
+                options: {
+                  boundary: 'viewport',
+                  padding: 8
+                }
+              }
+            ]
+          },
+          // Animation - Requirement 5.2: smooth appear/disappear
+          animation: 'shift-away',
+          duration: [150, 100],
+          // Additional options for better UX
+          interactive: true,
+          appendTo: () => document.body,
+          zIndex: 9999
+        }
+      })
+    )
   }
 })
 
@@ -149,6 +202,10 @@ defineExpose({
   <div class="tiptap-editor">
     <EditorToolbar :editor="editor" />
     <EditorContent :editor="editor" class="editor-content" />
+    <!-- Bubble Menu element - Requirements 1.1, 1.2, 1.3, 1.4 -->
+    <div ref="bubbleMenuRef" class="bubble-menu">
+      <BubbleMenuToolbar :editor="editor" />
+    </div>
   </div>
 </template>
 
@@ -357,5 +414,36 @@ defineExpose({
 /* Selection highlight */
 .editor-content :deep(.tiptap ::selection) {
   background-color: rgba(59, 130, 246, 0.3);
+}
+
+/* Bubble Menu base styles - Requirements 1.1, 5.1, 5.2, 5.4 */
+.bubble-menu {
+  background-color: #fff;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 4px 8px;
+}
+
+/* Tippy.js animation styles - Requirement 5.2: smooth appear/disappear animations */
+.bubble-menu[data-animation='shift-away'][data-state='hidden'] {
+  opacity: 0;
+}
+
+.bubble-menu[data-animation='shift-away'][data-state='visible'] {
+  opacity: 1;
+}
+
+.bubble-menu[data-animation='shift-away'][data-placement^='top'][data-state='hidden'] {
+  transform: translateY(8px);
+}
+
+.bubble-menu[data-animation='shift-away'][data-placement^='bottom'][data-state='hidden'] {
+  transform: translateY(-8px);
+}
+
+/* CSS transition for smooth animation - Requirement 5.2 */
+.bubble-menu {
+  transition: opacity 0.15s ease, transform 0.15s ease;
 }
 </style>
