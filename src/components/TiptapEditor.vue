@@ -13,6 +13,7 @@ import Placeholder from '@tiptap/extension-placeholder'
 import { ref, watch, onBeforeUnmount, onMounted } from 'vue'
 import EditorToolbar from './EditorToolbar.vue'
 import BubbleMenuToolbar from './BubbleMenuToolbar.vue'
+import ImageBubbleMenu from './ImageBubbleMenu.vue'
 import DragHandleMenu from './DragHandleMenu.vue'
 import BlockContextMenu from './BlockContextMenu.vue'
 import { toHTML } from '../utils/markdownConverter'
@@ -20,6 +21,7 @@ import { SlashCommand } from '../utils/slashCommand'
 import { BlockContextMenuShortcut } from '../utils/dragHandleConfig'
 import { BlockColor } from '../utils/blockColorExtension'
 import { BlockOperations } from '../utils/blockOperations'
+import { CustomImage } from '../extensions/imageExtension'
 
 /**
  * TiptapEditor - Main rich text editor component
@@ -46,6 +48,9 @@ const emit = defineEmits(['update:modelValue', 'update'])
 
 // Ref for bubble menu element - Requirements 1.1, 1.2
 const bubbleMenuRef = ref(null)
+
+// Ref for image bubble menu element - Requirements 2.3, 2.4, 7.1
+const imageBubbleMenuRef = ref(null)
 
 // Drag handle state
 const currentNode = ref(null)
@@ -95,7 +100,11 @@ const editor = useEditor({
     NodeRange,
     BlockContextMenuShortcut,
     BlockColor,
-    BlockOperations
+    BlockOperations,
+    CustomImage.configure({
+      inline: false,
+      allowBase64: true
+    })
   ],
   onUpdate: ({ editor }) => {
     emit('update:modelValue', editor.getHTML())
@@ -106,15 +115,17 @@ const editor = useEditor({
 // Register BubbleMenu plugin after editor is ready - Requirements 1.1, 1.2, 1.3
 onMounted(() => {
   if (editor.value && bubbleMenuRef.value) {
+    // Text formatting bubble menu
     editor.value.registerPlugin(
       BubbleMenuPlugin({
         pluginKey: 'bubbleMenu',
         editor: editor.value,
         element: bubbleMenuRef.value,
         shouldShow: ({ editor: ed, state }) => {
-          // Only show when there's a non-empty selection and not dragging
+          // Only show when there's a non-empty selection, not dragging, and not an image
           // Requirements 1.1, 1.2, 2.5 (prevent during drag)
-          return !state.selection.empty && ed.isEditable && !isDragging.value
+          const isImageSelected = ed.isActive('image')
+          return !state.selection.empty && ed.isEditable && !isDragging.value && !isImageSelected
         },
         // Tippy.js options - Requirements 5.2 (animations), 5.4 (positioning)
         tippyOptions: {
@@ -143,6 +154,47 @@ onMounted(() => {
           animation: 'shift-away',
           duration: [150, 100],
           // Additional options for better UX
+          interactive: true,
+          appendTo: () => document.body,
+          zIndex: 9999
+        }
+      })
+    )
+  }
+  
+  // Register Image BubbleMenu plugin - Requirements 2.3, 2.4, 7.1
+  if (editor.value && imageBubbleMenuRef.value) {
+    editor.value.registerPlugin(
+      BubbleMenuPlugin({
+        pluginKey: 'imageBubbleMenu',
+        editor: editor.value,
+        element: imageBubbleMenuRef.value,
+        shouldShow: ({ editor: ed }) => {
+          // Only show when an image is selected
+          return ed.isActive('image') && ed.isEditable && !isDragging.value
+        },
+        tippyOptions: {
+          placement: 'top',
+          offset: [0, 8],
+          popperOptions: {
+            modifiers: [
+              {
+                name: 'flip',
+                options: {
+                  fallbackPlacements: ['bottom', 'top-start', 'top-end', 'bottom-start', 'bottom-end']
+                }
+              },
+              {
+                name: 'preventOverflow',
+                options: {
+                  boundary: 'viewport',
+                  padding: 8
+                }
+              }
+            ]
+          },
+          animation: 'shift-away',
+          duration: [150, 100],
           interactive: true,
           appendTo: () => document.body,
           zIndex: 9999
@@ -265,6 +317,20 @@ function handleDragEnd() {
   }, 100)
 }
 
+// Handle image edit from bubble menu - Requirement 3.1
+function handleImageEdit() {
+  // This will be connected to an image properties dialog in a future task
+  // For now, we can use a simple prompt for alt text
+  if (!editor.value) return
+  
+  const currentAlt = editor.value.getAttributes('image').alt || ''
+  const newAlt = window.prompt('编辑图片替代文本:', currentAlt)
+  
+  if (newAlt !== null) {
+    editor.value.chain().focus().updateAttributes('image', { alt: newAlt }).run()
+  }
+}
+
 // Expose methods for parent components
 defineExpose({
   getHTML,
@@ -307,6 +373,11 @@ defineExpose({
     <!-- Bubble Menu element - Requirements 1.1, 1.2, 1.3, 1.4 -->
     <div ref="bubbleMenuRef" class="bubble-menu">
       <BubbleMenuToolbar :editor="editor" />
+    </div>
+    
+    <!-- Image Bubble Menu element - Requirements 2.3, 2.4, 7.1 -->
+    <div ref="imageBubbleMenuRef" class="bubble-menu image-bubble-menu">
+      <ImageBubbleMenu :editor="editor" @edit="handleImageEdit" />
     </div>
   </div>
 </template>
@@ -516,6 +587,39 @@ defineExpose({
 /* Selection highlight */
 .editor-content :deep(.tiptap ::selection) {
   background-color: rgba(59, 130, 246, 0.3);
+}
+
+/* Image styles - Requirements 1.2, 2.1, 2.3, 2.4 */
+.editor-content :deep(.tiptap img) {
+  max-width: 100%;
+  height: auto;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: box-shadow 0.15s ease;
+}
+
+.editor-content :deep(.tiptap img.ProseMirror-selectednode) {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Image alignment styles - Requirement 2.4 */
+.editor-content :deep(.tiptap img[data-alignment="left"]) {
+  display: block;
+  margin-left: 0;
+  margin-right: auto;
+}
+
+.editor-content :deep(.tiptap img[data-alignment="center"]) {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.editor-content :deep(.tiptap img[data-alignment="right"]) {
+  display: block;
+  margin-left: auto;
+  margin-right: 0;
 }
 
 /* Bubble Menu base styles - Requirements 1.1, 5.1, 5.2, 5.4 */

@@ -1,0 +1,188 @@
+# Implementation Plan
+
+- [x] 1. Install dependencies and set up project structure
+  - Install `@tiptap/extension-image`, `@tiptap/extension-mathematics`, `@tiptap/extension-table`, `@tiptap/extension-table-row`, `@tiptap/extension-table-cell`, `@tiptap/extension-table-header`, and `katex` packages
+  - Create `src/extensions/` directory for extension configurations
+  - Import KaTeX CSS in main.js
+  - _Requirements: 1.1, 4.1, 5.1, 8.1_
+
+- [-] 2. Implement Image Extension
+  - [x] 2.1 Create custom image extension with extended attributes
+    - Extend `@tiptap/extension-image` with caption, alignment, width, height attributes
+    - Add `setImage` and `updateImageAttributes` commands
+    - Configure draggable and selectable options
+    - _Requirements: 1.2, 2.4, 3.2, 3.3_
+  - [ ]* 2.2 Write property test for image insertion
+    - **Property 1: Valid URL image insertion**
+    - **Validates: Requirements 1.2**
+  - [ ]* 2.3 Write property test for image alignment
+    - **Property 5: Image alignment application**
+    - **Validates: Requirements 2.4**
+  - [ ]* 2.4 Write property test for image attribute storage
+    - **Property 6: Image attribute storage**
+    - **Validates: Requirements 3.2, 3.3**
+
+- [-] 3. Implement Image Utilities
+  - [x] 3.1 Create imageUtils.js with URL validation and base64 conversion
+    - Implement `isValidImageUrl()` function
+    - Implement `fileToBase64()` function
+    - Implement `validateImageFile()` function for size and format checks
+    - _Requirements: 1.2, 1.3, 1.4_
+  - [ ]* 3.2 Write property test for base64 conversion
+    - **Property 2: Base64 conversion preserves image data**
+    - **Validates: Requirements 1.3**
+  - [ ]* 3.3 Write property test for invalid URL rejection
+    - **Property 3: Invalid URL rejection**
+    - **Validates: Requirements 1.4**
+
+- [x] 4. Implement Image Dialog Component
+  - [x] 4.1 Create ImageDialog.vue with URL input and file upload
+    - Add URL input field with validation
+    - Add file upload button with drag-and-drop support
+    - Add preview area for selected image
+    - Emit insert event with image data
+    - _Requirements: 1.1, 1.2, 1.3_
+  - [ ]* 4.2 Write unit tests for ImageDialog component
+    - Test URL validation display
+    - Test file selection handling
+    - _Requirements: 1.1, 1.4_
+
+- [x] 5. Implement Image Bubble Menu
+  - [x] 5.1 Create ImageBubbleMenu.vue with alignment and edit options
+    - Add alignment buttons (left, center, right)
+    - Add edit button to open properties dialog
+    - Add delete button
+    - _Requirements: 2.3, 2.4, 7.1_
+  - [ ]* 5.2 Write property test for aspect ratio preservation
+    - **Property 4: Aspect ratio preservation during resize**
+    - **Validates: Requirements 2.2**
+
+- [x] 6. Checkpoint - Ensure all image tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [x] 7. Configure Mathematics Extension
+  - [x] 7.1 Create mathExtension.js configuration file
+    - Configure `@tiptap/extension-mathematics` with KaTeX options
+    - Set up input rules for `$...$` and `$$...$$` syntax
+    - Configure error handling for invalid LaTeX
+    - _Requirements: 4.1, 4.4, 5.1, 5.4_
+  - [ ]* 7.3 Write property test for inline math input rule
+    - **Property 7: Inline math input rule parsing**
+    - **Validates: Requirements 4.1**
+  - [ ]* 7.4 Write property test for block math input rule
+    - **Property 10: Block math input rule parsing**
+    - **Validates: Requirements 5.1**
+  - [ ]* 7.5 Write property test for math latex update
+    - **Property 8: Math latex attribute update**
+    - **Validates: Requirements 4.4, 5.4**
+  - [ ]* 7.6 Write property test for invalid LaTeX handling
+    - **Property 9: Invalid LaTeX preservation**
+    - **Validates: Requirements 4.5**
+
+- [x] 8. Implement Math Dialog Component
+  - [x] 8.1 Create MathDialog.vue for formula editing
+    - Add LaTeX input textarea with syntax highlighting
+    - Add live preview using KaTeX
+    - Add error display for invalid LaTeX
+    - Support both inline and block mode
+    - _Requirements: 4.3, 5.3_
+  - [ ]* 8.2 Write unit tests for MathDialog component
+    - Test LaTeX input and preview
+    - Test error handling display
+    - _Requirements: 4.3, 4.5_
+
+- [ ] 9. Checkpoint - Ensure all math tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 10. Configure Table Extension
+  - [ ] 10.1 Create tableExtension.js configuration file
+    - Configure `@tiptap/extension-table` with resizable option
+    - Import and configure TableRow, TableCell, TableHeader extensions
+    - Set up table styling classes
+    - _Requirements: 8.1, 8.2_
+  - [ ]* 10.2 Write property test for table insertion
+    - **Property 15: Table insertion with dimensions**
+    - **Validates: Requirements 8.1**
+  - [ ]* 10.3 Write property test for table row operations
+    - **Property 16: Table row operations preserve columns**
+    - **Validates: Requirements 9.1, 9.2, 9.5**
+  - [ ]* 10.4 Write property test for table column operations
+    - **Property 17: Table column operations preserve rows**
+    - **Validates: Requirements 9.3, 9.4, 9.6**
+
+- [x] 11. Implement Table Context Menu
+  - [x] 11.1 Create TableContextMenu.vue component
+    - Add row operations (add above, add below, delete)
+    - Add column operations (add left, add right, delete)
+    - Add header toggle options
+    - Add delete table option
+    - _Requirements: 8.5, 9.1-9.7, 10.1, 10.2_
+  - [ ]* 11.2 Write unit tests for TableContextMenu
+    - Test menu item rendering
+    - Test command execution
+    - _Requirements: 8.5, 9.1-9.7_
+
+- [x] 12. Checkpoint - Ensure all table tests pass
+  - Ensure all tests pass, ask the user if questions arise.
+
+- [ ] 13. Update Markdown Converter
+  - [ ] 13.1 Add image syntax support to markdownConverter.js
+    - Add Turndown rule for image nodes with caption
+    - Add Marked extension for parsing image syntax
+    - Handle alignment in markdown comments
+    - _Requirements: 6.1, 6.4_
+  - [ ] 13.2 Add math syntax support to markdownConverter.js
+    - Add Turndown rule for inline math nodes
+    - Add Turndown rule for block math nodes
+    - Add Marked extension for parsing `$...$` and `$$...$$`
+    - _Requirements: 6.2, 6.3, 6.5_
+  - [ ] 13.3 Add table syntax support to markdownConverter.js
+    - Add Turndown rule for table nodes (GFM syntax)
+    - Add Marked extension for parsing GFM tables
+    - _Requirements: 11.1, 11.2_
+  - [ ]* 13.4 Write property test for image markdown round-trip
+    - **Property 11: Markdown round-trip for images**
+    - **Validates: Requirements 6.1, 6.4**
+  - [ ]* 13.5 Write property test for math markdown round-trip
+    - **Property 12: Markdown round-trip for math**
+    - **Validates: Requirements 6.2, 6.3, 6.5**
+  - [ ]* 13.6 Write property test for markdown parser round-trip
+    - **Property 13: Markdown parser round-trip**
+    - **Validates: Requirements 6.6**
+  - [ ]* 13.7 Write property test for table markdown round-trip
+    - **Property 18: Markdown round-trip for tables**
+    - **Validates: Requirements 11.1, 11.2, 11.3**
+
+- [-] 14. Integrate Extensions into Editor
+  - [x] 14.1 Update TiptapEditor.vue to register new extensions
+    - Import and register image extension
+    - Import and register mathematics extension
+    - Import and register table extensions (Table, TableRow, TableCell, TableHeader)
+    - Add image bubble menu integration
+    - Add table context menu integration
+    - _Requirements: 1.1, 4.1, 5.1, 8.1_
+  - [ ] 14.2 Update EditorToolbar.vue with image, math and table buttons
+    - Add image insertion button
+    - Add inline math button
+    - Add table insertion button with size selector
+    - Wire up dialog triggers
+    - _Requirements: 1.1, 4.2, 5.2, 8.1_
+  - [ ] 14.3 Update SlashCommand with image, math and table options
+    - Add "Image" command item
+    - Add "Inline Math" command item
+    - Add "Math Block" command item
+    - Add "Table" command item
+    - _Requirements: 1.1, 4.2, 5.2, 8.1_
+  - [ ]* 14.4 Write property test for node deletion
+    - **Property 14: Node deletion**
+    - **Validates: Requirements 7.1**
+
+- [ ] 15. Add Table Styles
+  - [ ] 15.1 Add table CSS styles to style.css
+    - Style table borders and cells
+    - Style header cells with distinct background
+    - Add hover and selection states
+    - _Requirements: 10.3_
+
+- [ ] 16. Final Checkpoint - Ensure all tests pass
+  - Ensure all tests pass, ask the user if questions arise.
