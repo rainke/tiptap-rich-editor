@@ -81,11 +81,6 @@ function loadSampleMarkdown() {
 
 <template>
   <div class="app-container">
-    <header class="app-header">
-      <h1>Tiptap Rich Text Editor</h1>
-      <p>A Vue 3 rich text editor with Markdown support</p>
-    </header>
-
     <main class="app-main">
       <!-- Editor Section -->
       <section class="editor-section">

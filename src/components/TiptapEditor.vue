@@ -5,14 +5,21 @@ import { Markdown } from '@tiptap/markdown'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
 import Highlight from '@tiptap/extension-highlight'
+import DragHandle from '@tiptap/extension-drag-handle-vue-3'
+import NodeRange from '@tiptap/extension-node-range'
 
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import { ref, watch, onBeforeUnmount, onMounted } from 'vue'
 import EditorToolbar from './EditorToolbar.vue'
 import BubbleMenuToolbar from './BubbleMenuToolbar.vue'
+import DragHandleMenu from './DragHandleMenu.vue'
+import BlockContextMenu from './BlockContextMenu.vue'
 import { toHTML } from '../utils/markdownConverter'
 import { SlashCommand } from '../utils/slashCommand'
+import { BlockContextMenuShortcut } from '../utils/dragHandleConfig'
+import { BlockColor } from '../utils/blockColorExtension'
+import { BlockOperations } from '../utils/blockOperations'
 
 /**
  * TiptapEditor - Main rich text editor component
@@ -39,6 +46,19 @@ const emit = defineEmits(['update:modelValue', 'update'])
 
 // Ref for bubble menu element - Requirements 1.1, 1.2
 const bubbleMenuRef = ref(null)
+
+// Drag handle state
+const currentNode = ref(null)
+const currentNodePos = ref(-1)
+
+// Block context menu ref
+const blockContextMenuRef = ref(null)
+
+// Drag handle ref
+const dragHandleRef = ref(null)
+
+// Dragging state - to hide bubble menu during drag
+const isDragging = ref(false)
 
 const defaultContent = `
 # hello
@@ -71,7 +91,11 @@ const editor = useEditor({
     Placeholder.configure({
       placeholder: props.placeholder
     }),
-    SlashCommand
+    SlashCommand,
+    NodeRange,
+    BlockContextMenuShortcut,
+    BlockColor,
+    BlockOperations
   ],
   onUpdate: ({ editor }) => {
     emit('update:modelValue', editor.getHTML())
@@ -88,8 +112,9 @@ onMounted(() => {
         editor: editor.value,
         element: bubbleMenuRef.value,
         shouldShow: ({ editor: ed, state }) => {
-          // Only show when there's a non-empty selection - Requirements 1.1, 1.2
-          return !state.selection.empty && ed.isEditable
+          // Only show when there's a non-empty selection and not dragging
+          // Requirements 1.1, 1.2, 2.5 (prevent during drag)
+          return !state.selection.empty && ed.isEditable && !isDragging.value
         },
         // Tippy.js options - Requirements 5.2 (animations), 5.4 (positioning)
         tippyOptions: {
@@ -198,6 +223,48 @@ function getEditor() {
   return editor.value
 }
 
+// Handle drag handle node change
+function handleDragHandleNodeChange({ node, pos }) {
+  currentNode.value = node
+  currentNodePos.value = pos
+}
+
+// Handle opening context menu from drag handle
+function handleOpenContextMenu() {
+  if (blockContextMenuRef.value && currentNode.value && dragHandleRef.value?.$el) {
+    const blockInfo = {
+      node: currentNode.value,
+      pos: currentNodePos.value,
+      nodeType: currentNode.value.type.name
+    }
+    blockContextMenuRef.value.open(dragHandleRef.value.$el, blockInfo)
+  }
+}
+
+// Handle add block from drag handle
+function handleAddBlock() {
+  if (!editor.value) return
+  
+  const pos = currentNodePos.value !== -1 
+    ? currentNodePos.value + (currentNode.value?.nodeSize || 1) 
+    : editor.value.state.selection.$to.after()
+  
+  editor.value.chain().focus().insertContentAt(pos, { type: 'paragraph' }).run()
+}
+
+// Handle drag start - hide bubble menu during drag
+function handleDragStart() {
+  isDragging.value = true
+}
+
+// Handle drag end - allow bubble menu to show again
+function handleDragEnd() {
+  // Small delay to prevent bubble menu from showing immediately
+  setTimeout(() => {
+    isDragging.value = false
+  }, 100)
+}
+
 // Expose methods for parent components
 defineExpose({
   getHTML,
@@ -213,6 +280,30 @@ defineExpose({
   <div class="tiptap-editor">
     <EditorToolbar :editor="editor" />
     <EditorContent :editor="editor" class="editor-content" />
+    
+    <!-- Drag Handle - Requirements 1.1, 1.4, 2.1 -->
+    <DragHandle
+      v-if="editor"
+      ref="dragHandleRef"
+      :editor="editor"
+      class="drag-handle"
+      :on-node-change="handleDragHandleNodeChange"
+      :on-element-drag-start="handleDragStart"
+      :on-element-drag-end="handleDragEnd"
+    >
+      <DragHandleMenu
+        :editor="editor"
+        @open-menu="handleOpenContextMenu"
+        @add-block="handleAddBlock"
+      />
+    </DragHandle>
+    
+    <!-- Block Context Menu - Requirements 3.1, 3.2 -->
+    <BlockContextMenu
+      ref="blockContextMenuRef"
+      :editor="editor"
+    />
+    
     <!-- Bubble Menu element - Requirements 1.1, 1.2, 1.3, 1.4 -->
     <div ref="bubbleMenuRef" class="bubble-menu">
       <BubbleMenuToolbar :editor="editor" />
@@ -244,7 +335,7 @@ defineExpose({
 
 /* Editable content area - Requirement 7.1: clearly defined editable area */
 .editor-content {
-  min-height: 200px;
+  min-height: 400px;
   padding: 16px 20px;
   background-color: #fff;
   border-top: 1px solid #e5e7eb;
@@ -428,7 +519,11 @@ defineExpose({
 }
 
 /* Bubble Menu base styles - Requirements 1.1, 5.1, 5.2, 5.4 */
+/* Hidden by default - tippy.js will control visibility */
 .bubble-menu {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
   background-color: #fff;
   border: 1px solid #d1d5db;
   border-radius: 6px;
@@ -456,5 +551,14 @@ defineExpose({
 /* CSS transition for smooth animation - Requirement 5.2 */
 .bubble-menu {
   transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+/* Drag Handle styles - Requirements 1.1, 1.2, 1.3, 1.4 */
+.drag-handle {
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 2px;
+  z-index: 9999;
 }
 </style>

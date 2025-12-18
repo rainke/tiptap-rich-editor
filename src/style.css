@@ -24,10 +24,6 @@ a:hover {
 
 body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
 }
 
 h1 {
@@ -58,11 +54,6 @@ button:focus-visible {
   padding: 2em;
 }
 
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-}
 
 @media (prefers-color-scheme: light) {
   :root {
@@ -75,4 +66,292 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+/**
+ * Drag Handle Styles
+ * Requirements: 1.1, 1.2, 1.3, 1.4
+ */
+
+/* Drag handle container - wrapper for the drag handle menu */
+.drag-handle-container {
+  display: flex;
+  align-items: center;
+  z-index: 9999;
+  background: white;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 2px;
+}
+
+/* The extension wraps the drag handle in a div with pointer-events: none */
+/* We need to ensure the container itself has pointer-events: auto */
+.drag-handle-container * {
+  pointer-events: auto;
+}
+
+/* Drag handle menu - contains add and grip buttons */
+.drag-handle-menu {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Base button styles for drag handle */
+.drag-handle-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background-color: transparent;
+  color: #9ca3af;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+/* Hover state for drag handle buttons */
+.drag-handle-button:hover {
+  color: #6b7280;
+  background-color: #f3f4f6;
+}
+
+/* Active/pressed state */
+.drag-handle-button:active {
+  color: #4b5563;
+  background-color: #e5e7eb;
+}
+
+/* Grip button specific - draggable cursor */
+.grip-button {
+  cursor: grab;
+}
+
+.grip-button:active {
+  cursor: grabbing;
+}
+
+/* Add button - hidden by default, shown on hover */
+.add-button {
+  opacity: 0;
+  transition: opacity 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+
+/* Show add button on container hover */
+.drag-handle-container:hover .add-button {
+  opacity: 1;
+}
+
+/* SVG icon styling */
+.drag-handle-button svg {
+  pointer-events: none;
+  flex-shrink: 0;
+}
+
+/* Legacy drag handle (fallback) */
+.drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 24px;
+  cursor: grab;
+  color: #9ca3af;
+  border-radius: 4px;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+/* Hover state - Requirement 1.1, 1.2 */
+.drag-handle:hover {
+  color: #6b7280;
+  background-color: #f3f4f6;
+}
+
+/* Active/dragging state */
+.drag-handle:active {
+  cursor: grabbing;
+  color: #4b5563;
+  background-color: #e5e7eb;
+}
+
+/* Drag handle SVG icon */
+.drag-handle svg {
+  pointer-events: none;
+}
+
+/**
+ * Tippy.js Drag Handle Animation Styles
+ * Requirements: 1.1, 1.2 - 150ms fade-in/fade-out transitions
+ */
+
+/* Fade animation for drag handle tippy */
+.tippy-box[data-animation='fade'] {
+  transition-property: opacity, transform;
+  transition-timing-function: ease;
+  transition-duration: 150ms; /* Requirement 1.1, 1.2: 150ms animation */
+}
+
+.tippy-box[data-animation='fade'][data-state='hidden'] {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.tippy-box[data-animation='fade'][data-state='visible'] {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Ensure smooth entry animation */
+.tippy-box[data-animation='fade'][data-placement^='left'] {
+  transform-origin: right center;
+}
+
+.tippy-box[data-animation='fade'][data-placement^='left'][data-state='hidden'] {
+  transform: translateX(4px) scale(0.95);
+}
+
+.tippy-box[data-animation='fade'][data-placement^='left'][data-state='visible'] {
+  transform: translateX(0) scale(1);
+}
+
+/**
+ * Drop Indicator Styles
+ * Requirement 2.2: Display drop indicator line at valid drop positions
+ */
+
+/* Drop indicator line during drag - ProseMirror's gapcursor/dropcursor */
+.ProseMirror-dropcursor {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: #3b82f6;
+  pointer-events: none;
+  z-index: 9999;
+  border-radius: 2px;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.5);
+  animation: dropIndicatorPulse 1s ease-in-out infinite;
+}
+
+@keyframes dropIndicatorPulse {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 6px rgba(59, 130, 246, 0.5);
+  }
+  50% {
+    opacity: 0.8;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.7);
+  }
+}
+
+/* Legacy drop indicator class (fallback) */
+.ProseMirror-drop-indicator {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: #3b82f6;
+  pointer-events: none;
+  z-index: 9999;
+  border-radius: 2px;
+  box-shadow: 0 0 6px rgba(59, 130, 246, 0.5);
+}
+
+/* Dragging state on document - Requirement 2.5: prevent text selection */
+.ProseMirror-dragging,
+.ProseMirror.dragging {
+  user-select: none !important;
+  cursor: grabbing !important;
+}
+
+/* Visual feedback for dragged block - Requirement 2.1: visual preview */
+.ProseMirror-dragging .ProseMirror-selectednode,
+.ProseMirror.dragging .ProseMirror-selectednode {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+  opacity: 0.7;
+  background-color: rgba(59, 130, 246, 0.05);
+}
+
+/* Drag handle visual feedback during drag */
+.drag-handle-container.is-dragging {
+  opacity: 0.5;
+}
+
+/* Block being dragged visual state */
+.ProseMirror [data-drag-handle] {
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.ProseMirror [data-drag-handle].dragging {
+  opacity: 0.5;
+  transform: scale(0.98);
+}
+
+/* Drop target highlight - shows where block will be dropped */
+.ProseMirror > *:not(.ProseMirror-selectednode) {
+  transition: transform 0.15s ease;
+}
+
+/* Smooth transition for blocks moving during drag */
+.ProseMirror.dragging > * {
+  transition: transform 0.1s ease-out;
+}
+
+/**
+ * Block hover styles for drag handle visibility
+ * Requirement 1.1: Appear when hovering within 50px of left edge
+ */
+
+/* Ensure blocks have relative positioning for drag handle */
+.ProseMirror > * {
+  position: relative;
+}
+
+/* Block background color support for context menu color feature */
+.ProseMirror [data-block-color] {
+  border-radius: 4px;
+  padding: 2px 4px;
+  margin: -2px -4px;
+}
+
+/* Predefined block colors - Requirement 4.1 */
+.ProseMirror [data-block-color="gray"] {
+  background-color: #f1f1f0;
+}
+
+.ProseMirror [data-block-color="brown"] {
+  background-color: #f4eeee;
+}
+
+.ProseMirror [data-block-color="orange"] {
+  background-color: #fbecdd;
+}
+
+.ProseMirror [data-block-color="yellow"] {
+  background-color: #fbf3db;
+}
+
+.ProseMirror [data-block-color="green"] {
+  background-color: #edf3ec;
+}
+
+.ProseMirror [data-block-color="blue"] {
+  background-color: #e7f3f8;
+}
+
+.ProseMirror [data-block-color="purple"] {
+  background-color: #f6f3f9;
+}
+
+.ProseMirror [data-block-color="pink"] {
+  background-color: #faf1f5;
+}
+
+.ProseMirror [data-block-color="red"] {
+  background-color: #fdebec;
 }
