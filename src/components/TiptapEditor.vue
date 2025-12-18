@@ -4,6 +4,8 @@ import { BubbleMenuPlugin } from '@tiptap/extension-bubble-menu'
 import { Markdown } from '@tiptap/markdown'
 import StarterKit from '@tiptap/starter-kit'
 import Underline from '@tiptap/extension-underline'
+import Highlight from '@tiptap/extension-highlight'
+
 import Link from '@tiptap/extension-link'
 import Placeholder from '@tiptap/extension-placeholder'
 import { ref, watch, onBeforeUnmount, onMounted } from 'vue'
@@ -38,12 +40,21 @@ const emit = defineEmits(['update:modelValue', 'update'])
 // Ref for bubble menu element - Requirements 1.1, 1.2
 const bubbleMenuRef = ref(null)
 
+const defaultContent = `
+# hello
+
+This is a **markdown** editor, ==hl== . xxx <u>gel</u>  .
+`
+
 // Initialize Tiptap editor with StarterKit and extensions
 const editor = useEditor({
   content: props.modelValue,
+  contentType: 'markdown',
+  content: defaultContent,
   editable: props.editable,
   extensions: [
     Markdown,
+    Highlight,
     StarterKit.configure({
       // StarterKit includes: Bold, Italic, Strike, Code, Heading, BulletList, 
       // OrderedList, Blockquote, CodeBlock, HorizontalRule, etc.
